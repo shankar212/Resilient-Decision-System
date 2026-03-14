@@ -1,0 +1,59 @@
+{
+  "application_approval": {
+    "name": "Application Approval Workflow",
+    "description": "Standard approval workflow for user applications.",
+    "stages": [
+      {
+        "id": "stage_1_validation",
+        "name": "Input Validation",
+        "rules": [
+          {
+            "id": "rule_mandatory_name",
+            "type": "mandatory",
+            "field": "applicant_name",
+            "on_fail": "reject"
+          },
+          {
+            "id": "rule_mandatory_age",
+            "type": "mandatory",
+            "field": "age",
+            "on_fail": "reject"
+          }
+        ],
+        "on_success": "stage_2_evaluation"
+      },
+      {
+        "id": "stage_2_evaluation",
+        "name": "Age & Score Evaluation",
+        "rules": [
+          {
+            "id": "rule_min_age",
+            "type": "threshold",
+            "field": "age",
+            "operator": ">=",
+            "value": 18,
+            "on_fail": "reject"
+          },
+          {
+            "id": "rule_credit_score",
+            "type": "threshold",
+            "field": "credit_score",
+            "operator": ">=",
+            "value": 650,
+            "on_fail": "manual_review"
+          }
+        ],
+        "on_success": "stage_3_background_check"
+      },
+      {
+        "id": "stage_3_background_check",
+        "name": "External Background Check",
+        "action": "external_dependency",
+        "mock_dependency_target": "background_check_service",
+        "retry_limit": 3,
+        "on_success": "success",
+        "on_fail": "reject"
+      }
+    ]
+  }
+}
