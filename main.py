@@ -13,6 +13,10 @@ app = FastAPI(title="Resilient Decision System", version="1.0.0")
 def on_startup():
     init_db()
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Resilient Decision System API. Please see /docs for usage."}
+
 @app.post("/requests", response_model=WorkflowRunResponse)
 def create_request(request: WorkflowRunRequest, db: Session = Depends(get_db)):
     try:

@@ -33,14 +33,23 @@ uvicorn main:app --reload
 The default FastAPI implementation auto-generates Swagger documentation. After launching the server, visit:
 **[http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)**
 
-### Key Endpoints
+### Available Endpoints for Testing
 
-- `GET /config`:
-  View the hot-loaded active configuration mapping, validating the business logic without opening code.
+You can use the Swagger UI (`/docs`), Postman, or `curl` to test the following endpoints.
 
-- `POST /requests`:
-  Submit an intake request. Requires `workflow_id`, an `idempotency_key` (UUID), and a completely dynamic `payload`. 
-  *Example body:*
+#### 1. Check Root Connection
+Ensure the API is responsive.
+- **Endpoint**: `GET /`
+- **Expected Response**: `{"message": "Welcome to the Resilient Decision System API..."}`
+
+#### 2. View Active Configuration
+View the currently loaded business rules mapping without opening code.
+- **Endpoint**: `GET /config`
+
+#### 3. Submit a New Request (Happy Path)
+Triggers a new workflow evaluation.
+- **Endpoint**: `POST /requests`
+- **Body Example**:
   ```json
   {
     "workflow_id": "application_approval",
@@ -53,11 +62,32 @@ The default FastAPI implementation auto-generates Swagger documentation. After l
   }
   ```
 
-- `GET /requests/{request_id}`:
-  Will retrieve the current execution flow state, the exact `current_stage`, the `retry_count`, and the granularly stored `audit_logs` history detailing every evaluated rule trace.
+#### 4. Trigger Dependency Failure (Retry Path)
+Simulates a breakdown in background-checks by passing a flag.
+- **Endpoint**: `POST /requests`
+- **Body Example**:
+  ```json
+  {
+    "workflow_id": "application_approval",
+    "idempotency_key": "another-unique-uuid-here",
+    "payload": {
+      "applicant_name": "Charlie Flaky",
+      "age": 30,
+      "credit_score": 680,
+      "force_dependency_failure": true
+    }
+  }
+  ```
+  *This will return a status of `RETRY`.*
 
-- `POST /requests/{request_id}/retry`:
-  Retry a workflow that has landed in the `RETRY` or `MANUAL_REVIEW` status due to dependency failure.
+#### 5. Check Request Status & Audit Trail
+Check the exact state and read the full traceability ledger of a past execution.
+- **Endpoint**: `GET /requests/{request_id}`
+- **Note**: Replace `{request_id}` with the UUID returned from the Step 3/4 POST response.
+
+#### 6. Manually Trigger a Retry
+Forces the system to re-evaluate a workflow paused in `RETRY` or `MANUAL_REVIEW`.
+- **Endpoint**: `POST /requests/{request_id}/retry`
 
 ## Executing Tests
 
